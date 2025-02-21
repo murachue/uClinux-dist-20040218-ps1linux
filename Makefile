@@ -212,6 +212,8 @@ oldconfig_linux:
 	$(MAKEARCH_KERNEL) -C $(LINUXDIR) oldconfig
 oldconfig_uClibc:
 	[ -z "$(findstring uClibc,$(LIBCDIR))" ] || $(MAKEARCH) -C $(LIBCDIR) oldconfig
+menuconfig_uClibc:
+	[ -z "$(findstring uClibc,$(LIBCDIR))" ] || $(MAKEARCH) -C $(LIBCDIR) menuconfig
 
 ############################################################################
 #
