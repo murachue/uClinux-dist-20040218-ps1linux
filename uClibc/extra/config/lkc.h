@@ -60,7 +60,9 @@ struct file *file_lookup(const char *name);
 int file_write_dep(const char *name);
 
 extern struct menu *current_entry;
+#ifndef LKC_MCONF
 extern struct menu *current_menu;
+#endif
 
 /* symbol.c */
 void sym_init(void);
