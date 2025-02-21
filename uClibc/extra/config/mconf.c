@@ -26,7 +26,6 @@
 #include "dialog.h"
 
 #define LKC_DIRECT_LINK
-#define LKC_MCONF
 #include "lkc.h"
 
 static char menu_backtitle[128];
