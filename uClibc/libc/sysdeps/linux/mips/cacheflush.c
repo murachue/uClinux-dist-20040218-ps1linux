@@ -22,5 +22,8 @@
 
 _syscall3(int, cacheflush, void *, addr, const int, nbytes, const int, op);
 weak_alias(cacheflush, _flush_cache)
+// mipsnommu does not have cachectl
+#ifdef __NR_cachectl
 _syscall3(int, cachectl, void *, addr, const int, nbytes, const int, op);
+#endif
 

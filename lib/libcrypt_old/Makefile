@@ -2,7 +2,7 @@
 # Makefile for libcrypt_old
 #
 
-CFLAGS += -Wall
+CFLAGS += -Wall -O0
 
 all: libcrypt_old.a
 

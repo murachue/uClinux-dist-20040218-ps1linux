@@ -1004,7 +1004,7 @@ extern int _reboot(int magic, int magic2, int flag);
 
 _syscall3(int, _reboot, int, magic, int, magic2, int, flag);
 
-#include <config/autoconf.h>
+//#include <config/autoconf.h>
 #ifdef CONFIG_PROP_LOGD_LOGD
 #include <sys/types.h>
 #include <unistd.h>

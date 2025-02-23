@@ -847,8 +847,10 @@ do_kill(argc, argv)
 			sig = SIGALRM;
  		else if (strcmp(cp, "TERM") == 0)
 			sig = SIGTERM;
+#ifdef SIGSTKFLT
  		else if (strcmp(cp, "STKFLT") == 0)
 			sig = SIGSTKFLT;
+#endif
  		else if (strcmp(cp, "CHLD") == 0)
 			sig = SIGCHLD;
 		else if (strcmp(cp, "CONT") == 0)

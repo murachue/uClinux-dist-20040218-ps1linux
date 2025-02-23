@@ -215,8 +215,8 @@ strong_alias(labs,abs)
 strong_alias(labs,llabs)
 #endif
 
-#if ULONG_MAX == UINTMAX_MAX
-strong_alias(labs,imaxabs)
+#if UINTMAX_MAX == ULONG_MAX
+//strong_alias(labs,imaxabs)
 #endif
 
 long int labs(long int j)
@@ -231,7 +231,7 @@ long int labs(long int j)
 #if defined(ULLONG_MAX) && (LLONG_MAX > LONG_MAX)
 
 #if (ULLONG_MAX == UINTMAX_MAX)
-strong_alias(llabs,imaxabs)
+//strong_alias(llabs,imaxabs)
 #endif
 
 long long int llabs(long long int j)
@@ -289,7 +289,7 @@ long long atoll(const char *nptr)
 #if defined(L_strtol) || defined(L_strtol_l)
 
 #if (ULONG_MAX == UINTMAX_MAX) && !defined(L_strtol_l)
-strong_alias(strtol,strtoimax)
+//strong_alias(strtol,strtoimax)
 #endif
 
 #if defined(ULLONG_MAX) && (ULLONG_MAX == ULONG_MAX)
@@ -312,9 +312,9 @@ __XL_ALIAS(strtol)
 
 #if !defined(L_strtoll_l)
 #if (ULLONG_MAX == UINTMAX_MAX)
-strong_alias(strtoll,strtoimax)
+//strong_alias(strtoll,strtoimax)
 #endif
-strong_alias(strtoll,strtoq)
+//strong_alias(strtoll,strtoq)
 #endif
 
 long long __XL(strtoll)(const char * __restrict str,
@@ -334,7 +334,7 @@ __XL_ALIAS(strtoll)
 #if defined(L_strtoul) || defined(L_strtoul_l)
 
 #if (ULONG_MAX == UINTMAX_MAX) && !defined(L_strtoul_l)
-strong_alias(strtoul,strtoumax)
+//strong_alias(strtoul,strtoumax)
 #endif
 
 #if defined(ULLONG_MAX) && (ULLONG_MAX == ULONG_MAX)
@@ -358,9 +358,9 @@ __XL_ALIAS(strtoul)
 
 #if !defined(L_strtoull_l)
 #if (ULLONG_MAX == UINTMAX_MAX)
-strong_alias(strtoull,strtoumax)
+//strong_alias(strtoull,strtoumax)
 #endif
-strong_alias(strtoull,strtouq)
+//strong_alias(strtoull,strtouq)
 #endif
 
 unsigned long long __XL(strtoull)(const char * __restrict str,

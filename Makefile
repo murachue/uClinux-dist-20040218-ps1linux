@@ -264,6 +264,10 @@ linux linux%_only:
 subdirs: linux
 	for dir in $(DIRS) ; do [ ! -d $$dir ] || $(MAKEARCH_KERNEL) -C $$dir || exit 1 ; done
 
+.PHONY: uclibc
+uclibc:
+	for dir in uClibc ; do [ ! -d $$dir ] || $(MAKEARCH_KERNEL) -C $$dir || exit 1 ; done
+
 dep:
 	@if [ ! -f $(LINUXDIR)/.config ] ; then \
 		echo "ERROR: you need to do a 'make config' first" ; \
