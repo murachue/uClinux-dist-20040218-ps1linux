@@ -219,8 +219,8 @@ ifdef UCLINUX_BUILD_USER
   endif
 	SH_LDFLAGS := $(LDFLAGS) $(SH_CRTI) $(LDPATH)
 	SH_LDLIBS  := -nodefaultlibs $(LIBC) $(LIBGCC) $(SH_CRTN)
-	#LDFLAGS += -Wl,-elf2flt
-	LDFLAGS += -Wl,-r
+	#LDFLAGS += -Wl,-elf2flt #TODO want to do this
+	LDFLAGS += -Wl,-r #TODO remove and use elf2flt
 	LDFLAGS += $(CRTI) $(LDPATH)
 	LDLIBS   = -nodefaultlibs $(LIBC) $(LIBGCC) $(CRTN)
 	CXXLIBS  = -Wl,-Bstatic $(LIBSTDCPP) -Wl,-Bdynamic $(LIBC) $(LIBGCC) $(CRTN)
