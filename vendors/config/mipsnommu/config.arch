@@ -90,6 +90,9 @@ ifdef UCLINUX_BUILD_LIB
 	CFLAGS  += -nostdinc -I$(ROOTDIR)/lib/$(LIBCDIR)/include -I$(ROOTDIR)
 	CFLAGS  += -idirafter $(GCC_DIR)/include
 
+	# quickhack: ldscript/elf2flt for mips/Sony/PlayStation1 does not support _gp(_disp) relocs yet
+	CFLAGS  += -fno-pic
+
 	# don't want all the CFLAGS for uClibc/Config
 	ARCH_CFLAGS = $(CFLAGS)
 
@@ -192,6 +195,9 @@ ifdef UCLINUX_BUILD_USER
 	CFLAGS  += -idirafter $(GCC_DIR)/include
 
 	CFLAGS	+= -nostdlib
+
+	# quickhack: ldscript/elf2flt for mips/Sony/PlayStation1 does not support _gp(_disp) relocs yet
+	CFLAGS  += -fno-pic
 
 	CXXFLAGS = $(CFLAGS) $(INCCXX)
 
