@@ -1,9 +1,10 @@
-include $(ROOTDIR)/vendors/config/mips/config.arch
+include $(ROOTDIR)/vendors/config/mipsnommu/config.arch
 
-ARCH=mipsnommu
+#ARCH=mipsnommu
 CROSS_COMPILE=mipsel-linux-
-#CPUFLAGS=
-#VENDOR_CFLAGS=
-#LOPT=-O1
-#UOPT=
+CPUFLAGS=-mips1 -mcpu=3000
+# vendor_cflags+=-Os maybe wrong
+VENDOR_CFLAGS=-Os
+LOPT=-Os
+UOPT=-Os
 #GLIBC_TARGET_OPTS=

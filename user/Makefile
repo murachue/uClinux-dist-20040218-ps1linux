@@ -329,6 +329,9 @@ all: config
 		[ ! -d $$i ] || make -C $$i || exit $$? ; \
 	done
 
+%_only:
+	[ ! -d $(@:_only=) ] || make -C $(@:_only=)
+
 romfs:
 	for i in $(dir_v) $(sort $(dir_y)) $(dir_p) ; do \
 		[ ! -d $$i ] || make -C $$i romfs || exit $$? ; \
@@ -338,6 +341,9 @@ clean:
 	-for i in $(dir_v) $(sort $(dir_y) $(dir_n) $(dir_)) $(dir_p) ; do \
 		[ ! -d $$i ] || make -C $$i clean; \
 	done
+
+%_clean:
+	[ ! -d $(@:_clean=) ] || make -C $(@:_clean=) clean
 
 prune:
 	-for i in $(sort $(dir_n) $(dir_)) ; do \

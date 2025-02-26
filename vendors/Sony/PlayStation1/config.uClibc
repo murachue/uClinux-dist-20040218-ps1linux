@@ -44,9 +44,8 @@ HAVE_DOT_CONFIG=y
 #
 # General Library Settings
 #
-DOPIC=y
+# DOPIC is not set
 # HAVE_NO_SHARED is not set
-# HAVE_SHARED is not set
 # ARCH_HAS_NO_LDSO is not set
 # UCLIBC_PIE_SUPPORT is not set
 UCLIBC_CTOR_DTOR=y

@@ -306,8 +306,17 @@ distclean: mrproper
 %_only:
 	[ ! -d "$(@:_only=)" ] || $(MAKEARCH) -C $(@:_only=)
 
+%_only_user:
+	[ ! -d "user/$(@:_only_user=)" ] || $(MAKEARCH) -C user $(@:_user=)
+
+%_only_uclibc:
+	[ -z "$(findstring uClibc,$(LIBCDIR))" ] || [ ! -d "uClibc/$(@:_only_uclibc=)" ] || $(MAKEARCH) -C $(LIBCDIR) _dir_$(@:_only_uclibc=)
+
 %_clean:
 	[ ! -d "$(@:_clean=)" ] || $(MAKEARCH) -C $(@:_clean=) clean
+
+%_clean_user:
+	[ ! -d "user/$(@:_clean_user=)" ] || $(MAKEARCH) -C user $(@:_user=)
 
 config_error:
 	@echo "*************************************************"
