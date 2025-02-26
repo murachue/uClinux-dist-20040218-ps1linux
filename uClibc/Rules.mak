@@ -224,8 +224,6 @@ endif
 CFLAGS_NOPIC:=$(CFLAGS)
 ifeq ($(DOPIC),y)
     CFLAGS += $(PICFLAG)
-else
-    CFLAGS += -fno-pic
 endif
 
 LIBGCC_CFLAGS ?= $(CFLAGS) $(CPU_CFLAGS-y)
