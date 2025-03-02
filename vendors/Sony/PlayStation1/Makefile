@@ -58,12 +58,12 @@ romfs:
 
 image: tools/psx-mcard/makemu tools/elf2psx/elf2psx
 	[ -d $(IMAGEDIR) ] || mkdir -p $(IMAGEDIR)
-	tools/makemu
+	tools/psx-mcard/makemu
 	mv -fv output.mcd $(ROMFSIMG)
+	dd if=/dev/zero of=$(ROMFSIMG).ext2 bs=128 count=$$((131072/128-8))
 	mke2fs -t ext2 -L PS1User -b 1024 -m 0 -I 128 -N 32 -O none -d $(ROMFSDIR) -Fv $(ROMFSIMG).ext2
-	dd if=$(ROMFSIMG).ext2 of=$(ROMFSIMG) bs=128 seek=8 count=$$((128-8))
+	dd if=$(ROMFSIMG).ext2 of=$(ROMFSIMG) bs=128 seek=8 count=$$((131072/128-8))
 	rm $(ROMFSIMG).ext2
-	cp $(ROMFSIMG) $(IMAGEDIR)/
 	tools/elf2psx/elf2psx -p $(ROOTDIR)/$(LINUXDIR)/linux $(IMAGE)
 
 tools/psx-mcard/makemu: tools/psx-mcard/makemu.c
