@@ -2,8 +2,8 @@
 #	Makefile -- Build instructions for Sony/PlayStation1 (from Nintendo/GBA from? Atmel/AT91)
 #
 
-ROMFSIMG = $(IMAGEDIR)/romfs.img
-IMAGE    = $(IMAGEDIR)/image.bin
+ROMFSIMG = $(IMAGEDIR)/output.mcd
+IMAGE    = $(IMAGEDIR)/kernel.exe
 
 
 ROMFS_DIRS = bin dev etc home lib mnt proc usr var
@@ -56,14 +56,18 @@ romfs:
 	$(ROMFSINST) /etc/passwd
 	echo "$(VERSIONSTR) -- " `date` > $(ROMFSDIR)/etc/version
 
-image:
+image: tools/psx-mcard/makemu tools/elf2psx/elf2psx
 	[ -d $(IMAGEDIR) ] || mkdir -p $(IMAGEDIR)
-	genromfs -v -V "ROMdisk" -f $(ROMFSIMG) -d $(ROMFSDIR)
-	$(CROSS_COMPILE)objcopy -O binary -j .text \
-		$(ROOTDIR)/$(LINUXDIR)/linux $(IMAGEDIR)/linux.text
-	$(CROSS_COMPILE)objcopy -O binary -j .data \
-		--change-section-lma .data=0 \
-		$(ROOTDIR)/$(LINUXDIR)/linux $(IMAGEDIR)/linux.data
-	cat $(IMAGEDIR)/linux.text $(IMAGEDIR)/linux.data $(ROMFSIMG) > $(IMAGE)
-	-cp $(IMAGE) /tftpboot
+	tools/makemu
+	mv -fv output.mcd $(ROMFSIMG)
+	mke2fs -t ext2 -L PS1User -b 1024 -m 0 -I 128 -N 32 -O none -d $(ROMFSDIR) -Fv $(ROMFSIMG).ext2
+	dd if=$(ROMFSIMG).ext2 of=$(ROMFSIMG) bs=128 seek=8 count=$$((128-8))
+	rm $(ROMFSIMG).ext2
+	cp $(ROMFSIMG) $(IMAGEDIR)/
+	tools/elf2psx/elf2psx -p $(ROOTDIR)/$(LINUXDIR)/linux $(IMAGE)
 
+tools/psx-mcard/makemu: tools/psx-mcard/makemu.c
+	$(HOSTCC) -o $@ $<
+
+tools/elf2psx/elf2psx: tools/elf2psx/elf2psx.c
+	$(HOSTCC) -o $@ $<
