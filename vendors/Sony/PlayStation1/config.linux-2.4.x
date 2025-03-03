@@ -14,7 +14,7 @@ CONFIG_EXPERIMENTAL=y
 # Machine selection
 #
 CONFIG_PLAYSTATION=y
-CONFIG_PSX_PIO_EXTENSION=y
+# CONFIG_PSX_PIO_EXTENSION is not set
 # CONFIG_MCA is not set
 # CONFIG_SBUS is not set
 # CONFIG_ISA is not set
@@ -117,7 +117,6 @@ CONFIG_PSX_MEM_CARD=y
 #
 # PlayStation Character devices
 #
-# CONFIG_RTC is not set
 
 #
 # File systems
@@ -212,6 +211,7 @@ CONFIG_INPUT_EVDEV=y
 #
 # Kernel hacking
 #
+CONFIG_FULLDEBUG=y
 CONFIG_CROSSCOMPILE=y
 # CONFIG_MAGIC_SYSRQ is not set
 # CONFIG_MIPS_UNCACHED is not set

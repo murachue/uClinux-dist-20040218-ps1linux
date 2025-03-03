@@ -3,8 +3,7 @@ include $(ROOTDIR)/vendors/config/mipsnommu/config.arch
 #ARCH=mipsnommu
 CROSS_COMPILE=mipsel-linux-
 CPUFLAGS=-mips1 -mcpu=3000
-# vendor_cflags+=-Os maybe wrong
-VENDOR_CFLAGS=-Os
+#VENDOR_CFLAGS=
 LOPT=-Os
 UOPT=-Os
 #GLIBC_TARGET_OPTS=

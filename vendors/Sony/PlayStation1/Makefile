@@ -9,7 +9,11 @@ IMAGE    = $(IMAGEDIR)/kernel.exe
 ROMFS_DIRS = bin dev etc home lib mnt proc usr var
 
 DEVICES = \
-	tty,c,5,0      console,c,5,1      cua0,c,5,64      cua1,c,5,65  \
+	console,c,5,1 \
+	null,c,1,3         zero,c,1,5 \
+	tty1,c,4,1     ttyS0,c,4,64
+
+#	tty,c,5,0      console,c,5,1      cua0,c,5,64      cua1,c,5,65  \
 	\
 	mem,c,1,1      kmem,c,1,2         null,c,1,3       ram0,b,1,0 \
 	ram1,b,1,1 \
@@ -42,7 +46,8 @@ romfs:
 		[ -d $(ROMFSDIR)/$$i ] || mkdir -p $(ROMFSDIR)/$$i; \
 	done
 	for i in $(DEVICES); do \
-		touch $(ROMFSDIR)/dev/@$$i; \
+		[ -e $(ROMFSDIR)/dev/$$(echo $$i | sed 's/,.*//') ] && rm $(ROMFSDIR)/dev/$$(echo $$i | sed 's/,.*//'); \
+		mknod $(ROMFSDIR)/dev/$$(echo $$i | tr "," " "); \
 	done
 	$(ROMFSINST) -s /var/tmp /tmp
 	$(ROMFSINST) -s /bin /sbin
@@ -61,7 +66,7 @@ image: tools/psx-mcard/makemu tools/elf2psx/elf2psx
 	tools/psx-mcard/makemu
 	mv -fv output.mcd $(ROMFSIMG)
 	dd if=/dev/zero of=$(ROMFSIMG).ext2 bs=128 count=$$((131072/128-8))
-	mke2fs -t ext2 -L PS1User -b 1024 -m 0 -I 128 -N 32 -O none -d $(ROMFSDIR) -Fv $(ROMFSIMG).ext2
+	mke2fs -t ext2 -L PS1User -b 1024 -m 0 -I 128 -N 32 -O none -d $(ROMFSDIR) $(ROMFSIMG).ext2
 	dd if=$(ROMFSIMG).ext2 of=$(ROMFSIMG) bs=128 seek=8 count=$$((131072/128-8))
 	rm $(ROMFSIMG).ext2
 	tools/elf2psx/elf2psx -p $(ROOTDIR)/$(LINUXDIR)/linux $(IMAGE)
