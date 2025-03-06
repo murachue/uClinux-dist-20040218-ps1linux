@@ -53,7 +53,8 @@ DOPIC=y
 # UCLIBC_PROPOLICE is not set
 # UCLIBC_PROFILING is not set
 # HAS_NO_THREADS is not set
-# UCLIBC_HAS_THREADS is not set
+UCLIBC_HAS_THREADS=y
+# PTHREADS_DEBUG_SUPPORT is not set
 # UCLIBC_HAS_LFS is not set
 # MALLOC is not set
 MALLOC_SIMPLE=y

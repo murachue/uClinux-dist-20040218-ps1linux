@@ -4,7 +4,7 @@
 #include <sys/mman.h>
 #include <sys/syscall.h>
 
-#if 0
+#if 1
 /* For now, leave mmap using mmap1 since mmap2 seems
  * to have issues (i.e. it doesn't work 100% properly).
  */
