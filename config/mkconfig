@@ -150,6 +150,9 @@ bool 'Customize Kernel Settings'			CONFIG_DEFAULTS_KERNEL
 [ -d modules ] &&
 	echo "bool 'Customize Module Settings'			CONFIG_DEFAULTS_MODULES"
 cat <<!EOF
+if [ "$CONFIG_DEFAULTS_LIBC_UCLIBC" = "y" ]; then
+	bool 'Customize uClibc Settings'		CONFIG_DEFAULTS_UCLIBC
+fi
 bool 'Customize Vendor/User Settings'		CONFIG_DEFAULTS_VENDOR
 bool 'Update Default Vendor Settings'		CONFIG_DEFAULTS_VENDOR_UPDATE
 endmenu

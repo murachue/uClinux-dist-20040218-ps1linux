@@ -385,6 +385,7 @@ if [ "$PASS" = "final" ]; then
 
 	grep -v CONFIG_DEFAULTS_VENDOR= < .config | \
 		grep -v CONFIG_DEFAULTS_MODULES= | \
+		grep -v CONFIG_DEFAULTS_UCLIBC= | \
 		grep -v CONFIG_DEFAULTS_KERNEL= > .config.tmp
 
 	cp .config.tmp .config

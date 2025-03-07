@@ -116,6 +116,9 @@ xconfig: config.tk
 	@if egrep "^CONFIG_DEFAULTS_MODULES=y" .config > /dev/null; then \
 		$(MAKE) modules_xconfig; \
 	 fi
+	@if egrep "^CONFIG_DEFAULTS_UCLIBC=y" .config > /dev/null; then \
+		$(MAKE) uClibc_xconfig; \
+	 fi
 	@if egrep "^CONFIG_DEFAULTS_VENDOR=y" .config > /dev/null; then \
 		$(MAKE) config_xconfig; \
 	 fi
@@ -131,6 +134,9 @@ config: config.in
 	 fi
 	@if egrep "^CONFIG_DEFAULTS_MODULES=y" .config > /dev/null; then \
 		$(MAKE) modules_config; \
+	 fi
+	@if egrep "^CONFIG_DEFAULTS_UCLIBC=y" .config > /dev/null; then \
+		$(MAKE) uClibc_config; \
 	 fi
 	@if egrep "^CONFIG_DEFAULTS_VENDOR=y" .config > /dev/null; then \
 		$(MAKE) config_config; \
@@ -154,6 +160,9 @@ menuconfig: config.in
 	 fi
 	@if egrep "^CONFIG_DEFAULTS_MODULES=y" .config > /dev/null; then \
 		$(MAKE) modules_menuconfig; \
+	 fi
+	@if egrep "^CONFIG_DEFAULTS_UCLIBC=y" .config > /dev/null; then \
+		$(MAKE) uClibc_menuconfig; \
 	 fi
 	@if egrep "^CONFIG_DEFAULTS_VENDOR=y" .config > /dev/null; then \
 		$(MAKE) config_menuconfig; \
@@ -212,7 +221,9 @@ oldconfig_linux:
 	$(MAKEARCH_KERNEL) -C $(LINUXDIR) oldconfig
 oldconfig_uClibc:
 	[ -z "$(findstring uClibc,$(LIBCDIR))" ] || $(MAKEARCH) -C $(LIBCDIR) oldconfig
-menuconfig_uClibc:
+uClibc_config:
+	[ -z "$(findstring uClibc,$(LIBCDIR))" ] || $(MAKEARCH) -C $(LIBCDIR) config
+uClibc_menuconfig:
 	[ -z "$(findstring uClibc,$(LIBCDIR))" ] || $(MAKEARCH) -C $(LIBCDIR) menuconfig
 
 ############################################################################
