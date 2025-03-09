@@ -18,7 +18,9 @@ Cambridge, MA 02139, USA.  */
 
 #include <errno.h>
 #include <unistd.h>
+#include <sys/syscall.h>
 
+#ifndef __NR_vfork
 /* If we don't have vfork, fork is close enough.  */
 
 __pid_t
@@ -28,3 +30,6 @@ __vfork __P ((void))
 }
 
 weak_alias (__vfork, vfork)
+#else
+_syscall0(__pid_t, vfork);
+#endif
