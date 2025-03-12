@@ -121,6 +121,6 @@ DEVEL_PREFIX="/usr/$(TARGET_ARCH)-linux-uclibc/usr/"
 #
 # uClibc development/debugging options
 #
-DODEBUG=y
+# DODEBUG is not set
 # DOASSERTS is not set
 # UCLIBC_MJN3_ONLY is not set
