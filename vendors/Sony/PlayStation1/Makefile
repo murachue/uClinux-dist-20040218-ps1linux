@@ -70,6 +70,7 @@ image: tools/psx-mcard/makemu tools/elf2psx/elf2psx
 	dd if=$(ROMFSIMG).ext2 of=$(ROMFSIMG) bs=128 seek=8 count=$$((131072/128-8))
 	rm $(ROMFSIMG).ext2
 	tools/elf2psx/elf2psx -p $(ROOTDIR)/$(LINUXDIR)/linux $(IMAGE)
+	awk '{print substr($$1,9,8)" "$$3}' $(ROOTDIR)/$(LINUXDIR)/System.map > $(IMAGEDIR)/kernel.sym
 
 tools/psx-mcard/makemu: tools/psx-mcard/makemu.c
 	$(HOSTCC) -o $@ $<
