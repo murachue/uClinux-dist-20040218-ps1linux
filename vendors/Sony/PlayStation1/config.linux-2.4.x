@@ -47,7 +47,7 @@ CONFIG_CPU_R3000=y
 # General setup
 #
 CONFIG_CPU_LITTLE_ENDIAN=y
-CONFIG_MIPS_FPU_EMULATOR=y
+# CONFIG_MIPS_FPU_EMULATOR is not set
 # CONFIG_SYSVIPC is not set
 # CONFIG_BSD_PROCESS_ACCT is not set
 # CONFIG_SYSCTL is not set
@@ -136,7 +136,7 @@ CONFIG_PSX_MEM_CARD=y
 # CONFIG_EFS_FS is not set
 # CONFIG_JFFS_FS is not set
 # CONFIG_CRAMFS is not set
-CONFIG_RAMFS=y
+# CONFIG_RAMFS is not set
 # CONFIG_ISO9660_FS is not set
 # CONFIG_JOLIET is not set
 # CONFIG_MINIX_FS is not set
@@ -144,7 +144,7 @@ CONFIG_RAMFS=y
 # CONFIG_NTFS_RW is not set
 # CONFIG_HPFS_FS is not set
 # CONFIG_PROC_FS is not set
-CONFIG_DEVFS_FS=y
+# CONFIG_DEVFS_FS is not set
 # CONFIG_DEVFS_MOUNT is not set
 # CONFIG_DEVFS_DEBUG is not set
 # CONFIG_DEVPTS_FS is not set
@@ -202,11 +202,7 @@ VT_SINGLE_DRIVER=y
 #
 # Input core support
 #
-CONFIG_INPUT=y
-# CONFIG_INPUT_KEYBDEV is not set
-# CONFIG_INPUT_MOUSEDEV is not set
-# CONFIG_INPUT_JOYDEV is not set
-CONFIG_INPUT_EVDEV=y
+# CONFIG_INPUT is not set
 
 #
 # Kernel hacking
