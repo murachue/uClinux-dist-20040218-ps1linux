@@ -233,7 +233,11 @@ static int old_lockfile = 1;
 /* Ensure that the lock is released if we are interrupted.  */
 static void
 handler (int sig) {
+#ifdef UCLIBC_HAS_SYS_SIGLIST
      die (EX_USER, "%s", sys_siglist[sig]);
+#else
+     die (EX_USER, "SIG%d", sig);
+#endif
 }
 
 static void

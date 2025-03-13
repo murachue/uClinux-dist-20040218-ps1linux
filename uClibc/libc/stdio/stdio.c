@@ -3429,7 +3429,7 @@ void perror(register const char *s)
 		s = (sep += 2);			/* or passed an empty string. */
 	}
 
-#if 1
+#if 0
 #ifdef __STDIO_PRINTF_M_SPEC
 	fprintf(stderr, "%s%s%m\n", s, sep); /* Use the gnu %m feature. */
 #else
@@ -3446,7 +3446,7 @@ void perror(register const char *s)
 
 		__STDIO_THREADLOCK(stderr);
 		_stdio_fdout(STDERR_FILENO, s, sep,
-					 _glibc_strerror_r(errno, buf, sizeof(buf)));
+					 _glibc_strerror_r(errno, buf, sizeof(buf)), NULL);
 		__STDIO_THREADUNLOCK(stderr);
 	}
 #endif
@@ -3484,7 +3484,7 @@ void _stdio_fdout(int fd, ...)
 
 #include <locale.h>
 
-char *_uintmaxtostr(register char * __restrict bufend, uintmax_t uval,
+char *_uintmaxtostr(register char * __restrict bufend, /*uintmax_t*/uint32_t uval,
 					int base, __UIM_CASE alphacase)
 {
     int negative;

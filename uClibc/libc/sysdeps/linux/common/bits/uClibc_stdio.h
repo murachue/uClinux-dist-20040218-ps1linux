@@ -569,7 +569,7 @@ extern void _stdio_fdout(int fd, ...);
  * WARNING: If val is really a signed type, make sure base is negative!
  *          Otherwise, you could overflow your buffer.
  */
-extern char *_uintmaxtostr(char * __restrict bufend, uintmax_t uval,
+extern char *_uintmaxtostr(char * __restrict bufend, /*uintmax_t*/uint32_t uval,
 						   int base, __UIM_CASE alphacase);
 
 /* TODO -- make this either a (possibly inline) function? */
