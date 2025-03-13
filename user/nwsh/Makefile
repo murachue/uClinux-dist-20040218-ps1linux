@@ -6,7 +6,7 @@ all: $(EXEC)
 
 # default 4K stack is not enough; glob->readdir destroyes .bss/.data
 $(EXEC): $(OBJS)
-	FLTFLAGS="-s 8192" $(CC) $(LDFLAGS) -o $@ $(OBJS) $(LDLIBS)
+	FLTFLAGS="$(FLTFLAGS) -s 8192" $(CC) $(LDFLAGS) -o $@ $(OBJS) $(LDLIBS)
 
 romfs:
 	$(ROMFSINST) /bin/$(EXEC)
