@@ -31,7 +31,7 @@ main(argc, argv)
 		mode = mode * 8 + (*cp++ - '0');
 
 	if (*cp) {
-		fputs(stderr, "Mode must be octal");
+		fputs("Mode must be octal\n", stderr);
 		exit(1);
 	}
 	argc--;
