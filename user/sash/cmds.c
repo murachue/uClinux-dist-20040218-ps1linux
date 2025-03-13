@@ -26,6 +26,7 @@
 #include <config/autoconf.h>
 #endif
 
+#ifndef ONLY_MOUNT_UMOUNT
 void
 do_echo(argc, argv)
 	char	**argv;
@@ -471,8 +472,10 @@ do_cp(argc, argv)
 		(void) copyfile(srcname, destname, FALSE);
 	}
 }
+#endif // ONLY_MOUNT_UMOUNT
 
 
+#if !defined(ONLY_MOUNT_UMOUNT) || defined(ONLY_MOUNT)
 void
 do_mount(argc, argv)
 	char	**argv;
@@ -491,7 +494,7 @@ do_mount(argc, argv)
 		while (*++str) switch (*str) {
 			case 't':
 				if ((argc <= 0) || (**argv == '-')) {
-					fprintf(stderr, "Missing file system type\n");
+					fputs("Missing file system type\n", stderr);
 					return;
 				}
 
@@ -500,21 +503,23 @@ do_mount(argc, argv)
 				break;
 
 			default:
-				fprintf(stderr, "Unknown option\n");
+				fputs("Unknown option\n", stderr);
 				return;
 		}
 	}
 
 	if (argc != 2) {
-		fprintf(stderr, "Wrong number of arguments for mount\n");
+		fputs("Wrong number of arguments for mount\n", stderr);
 		return;
 	}
 
 	if (mount(argv[0], argv[1], type, 0, 0) < 0)
 		perror("mount failed");
 }
+#endif
 
 
+#if !defined(ONLY_MOUNT_UMOUNT) || defined(ONLY_UMOUNT)
 void
 do_umount(argc, argv)
 	char	**argv;
@@ -522,8 +527,10 @@ do_umount(argc, argv)
 	if (umount(argv[1]) < 0)
 		perror(argv[1]);
 }
+#endif
 
 
+#ifndef ONLY_MOUNT_UMOUNT
 void
 do_cmp(argc, argv)
 	char	**argv;
@@ -900,5 +907,6 @@ do_kill(argc, argv)
 		}
 	}
 }
+#endif // ONLY_MOUNT_UMOUNT
 
 /* END CODE */

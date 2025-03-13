@@ -40,6 +40,8 @@ if [ "$CONFIG_USER_BUSYBOX_BUSYBOX" = "y" -a \
 	fi
 fi
 bool 'shutdown (sash)'		CONFIG_USER_SASH_SHUTDOWN
+bool 'mount (sash)'		CONFIG_USER_SASH_MOUNT
+bool 'umount (sash)'		CONFIG_USER_SASH_UMOUNT
 bool 'expand'			CONFIG_USER_INIT_EXPAND
 if [ "$CONFIG_USER_INIT_EXPAND" = "y" ]; then
 	bool '  expand should not write zeroes'	CONFIG_USER_INIT_EXPAND_NOZEROES
