@@ -816,9 +816,10 @@ static int extend_inode(int ino)
 	if (next_block < 7) {
 		inode->i_zone[next_block] = alloced = alloc_zone();
 	} else if (next_block < 7 + 512) {
-		if (next_block == 7)
+		if (next_block == 7) {
+			inode->i_zone[7] = alloc_zone();
 			bzero(ind_block, BLOCK_SIZE);
-		else
+		} else
 			read_block(inode->i_zone[7], ind_block);
 		ind_block[next_block - 7] = alloced = alloc_zone();
 		write_block(inode->i_zone[7], (char *) ind_block);
