@@ -6,7 +6,8 @@ ROMFSIMG = $(IMAGEDIR)/output.mcd
 IMAGE    = $(IMAGEDIR)/kernel.exe
 
 
-ROMFS_DIRS = bin dev etc home lib mnt proc usr var
+#ROMFS_DIRS = bin dev etc home lib mnt proc usr var
+ROMFS_DIRS = bin dev proc
 
 DEVICES = \
 	console,c,5,1 \
@@ -49,26 +50,27 @@ romfs:
 		[ -e $(ROMFSDIR)/dev/$$(echo $$i | sed 's/,.*//') ] && rm $(ROMFSDIR)/dev/$$(echo $$i | sed 's/,.*//'); \
 		mknod $(ROMFSDIR)/dev/$$(echo $$i | tr "," " "); \
 	done
-	$(ROMFSINST) -s /var/tmp /tmp
-	$(ROMFSINST) -s /bin /sbin
-	$(ROMFSINST) /etc/rc
-	$(ROMFSINST) /etc/inittab
+	#$(ROMFSINST) -s /var/tmp /tmp
+	#$(ROMFSINST) -s /bin /sbin
+	#$(ROMFSINST) /etc/rc
+	#$(ROMFSINST) /etc/inittab
 	case "$(LINUXDIR)" in \
 	*2.4.*) ;; \
 	*) echo "ttyS0:linux:/bin/sh" >> $(ROMFSDIR)/etc/inittab ;; \
 	esac
-	$(ROMFSINST) /etc/motd
-	$(ROMFSINST) /etc/passwd
-	echo "$(VERSIONSTR) -- " `date` > $(ROMFSDIR)/etc/version
+	#$(ROMFSINST) /etc/motd
+	#$(ROMFSINST) /etc/passwd
+	#echo "$(VERSIONSTR) -- " `date` > $(ROMFSDIR)/etc/version
+	echo "$(VERSIONSTR) -- " `date` > $(ROMFSDIR)/version
 
-image: tools/psx-mcard/makemu tools/elf2psx/elf2psx
+image: tools/psx-mcard/makemu tools/elf2psx/elf2psx mkfs.minix
 	[ -d $(IMAGEDIR) ] || mkdir -p $(IMAGEDIR)
 	tools/psx-mcard/makemu
 	mv -fv output.mcd $(ROMFSIMG)
-	dd if=/dev/zero of=$(ROMFSIMG).ext2 bs=128 count=$$((131072/128-8))
-	mke2fs -t ext2 -L PS1User -b 1024 -m 0 -I 128 -N 32 -O none -d $(ROMFSDIR) $(ROMFSIMG).ext2
-	dd if=$(ROMFSIMG).ext2 of=$(ROMFSIMG) bs=128 seek=8 count=$$((131072/128-8))
-	rm $(ROMFSIMG).ext2
+	dd if=/dev/zero of=$(ROMFSIMG).part bs=128 count=$$((131072/128-8))
+	./mkfs.minix -i 32 -d $(ROMFSDIR) $(ROMFSIMG).part
+	dd if=$(ROMFSIMG).part of=$(ROMFSIMG) bs=128 seek=8 count=$$((131072/128-8))
+	rm $(ROMFSIMG).part
 	tools/elf2psx/elf2psx -p $(ROOTDIR)/$(LINUXDIR)/linux $(IMAGE)
 	awk '{print substr($$1,9,8)" "$$3}' $(ROOTDIR)/$(LINUXDIR)/System.map > $(IMAGEDIR)/kernel.sym
 
@@ -76,4 +78,7 @@ tools/psx-mcard/makemu: tools/psx-mcard/makemu.c
 	$(HOSTCC) -o $@ $<
 
 tools/elf2psx/elf2psx: tools/elf2psx/elf2psx.c
+	$(HOSTCC) -o $@ $<
+
+mkfs.minix: mkfs_minix.c
 	$(HOSTCC) -o $@ $<

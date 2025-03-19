@@ -7,3 +7,4 @@ CPUFLAGS=-mips1 -mcpu=3000
 LOPT=-Os
 UOPT=-Os
 #GLIBC_TARGET_OPTS=
+LDFLAGS += -Wl,--oMap

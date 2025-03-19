@@ -141,7 +141,7 @@ CONFIG_PSX_MEM_CARD=y
 # CONFIG_RAMFS is not set
 # CONFIG_ISO9660_FS is not set
 # CONFIG_JOLIET is not set
-# CONFIG_MINIX_FS is not set
+CONFIG_MINIX_FS=y
 # CONFIG_NTFS_FS is not set
 # CONFIG_NTFS_RW is not set
 # CONFIG_HPFS_FS is not set
@@ -153,7 +153,7 @@ CONFIG_PROC_FS=y
 # CONFIG_QNX4FS_FS is not set
 # CONFIG_QNX4FS_RW is not set
 # CONFIG_ROMFS_FS is not set
-CONFIG_EXT2_FS=y
+# CONFIG_EXT2_FS is not set
 # CONFIG_SYSV_FS is not set
 # CONFIG_SYSV_FS_WRITE is not set
 # CONFIG_UDF_FS is not set
