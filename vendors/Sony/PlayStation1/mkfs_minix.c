@@ -47,13 +47,16 @@
  * 02.07.96  -  Added small patch from Russell King to make the program a
  *		good deal more portable (janl@math.uio.no)
  *
- * Usage:  mkfs [-c | -l filename ] [-v] [-nXX] [-iXX] device [size-in-blocks]
+ * 03.14.25  -	add make-from-directory function.
+ *
+ * Usage:  mkfs [-c | -l filename ] [-v] [-nXX] [-iXX] [-d dirname] device [size-in-blocks]
  *
  *	-c for readablility checking (SLOW!)
  *      -l for getting a list of bad blocks from a file.
  *	-n for namelength (currently the kernel only uses 14 or 30)
  *	-i for number of inodes
  *	-v for v2 filesystem
+ *	-d for make filesystem from that directory
  *
  * The device may be a block device or a image of one, but this isn't
  * enforced (but it's not much fun on a character device :-). 
@@ -61,6 +64,8 @@
  * Modified for BusyBox by Erik Andersen <andersen@debian.org> --
  *	removed getopt based parser and added a hand rolled one.
  */
+
+#define _GNU_SOURCE
 
 #include <stdio.h>
 #include <time.h>
@@ -74,7 +79,29 @@
 #include <sys/ioctl.h>
 #include <sys/param.h>
 #include <mntent.h>
-#include "busybox.h"
+#include <sys/types.h>
+#include <dirent.h>
+//#include "busybox.h"
+#define xmalloc malloc
+#define xfopen fopen
+#include <stdarg.h>
+void error_msg_and_die(const char *fmt, ...){va_list p;va_start(p,fmt);vfprintf(stderr,fmt,p);va_end(p);fputs("\n",stderr);exit(1);}
+void perror_msg_and_die(const char *fmt, ...){va_list p;va_start(p,fmt);vfprintf(stderr,fmt,p);perror("");va_end(p);exit(1);}
+void error_msg(const char *fmt, ...){va_list p;va_start(p,fmt);vfprintf(stderr,fmt,p);va_end(p);}
+#include <sys/stat.h>
+void show_usage(void){fprintf(stderr, /*"%s\n\n"*/"Usage: %s %s\n\n", /*"",*/ "mkfs.minix", "[-c | -l filename] [-nXX] [-iXX] [-d dirname] /dev/name [blocks]" "\n\n"
+	"Make a MINIX filesystem.\n\n"
+	"Options:\n"
+	"\t-c\t\tCheck the device for bad blocks\n"
+	"\t-n [14|30]\tSpecify the maximum length of filenames\n"
+	"\t-i INODES\tSpecify the number of inodes for the filesystem\n"
+	"\t-l FILENAME\tRead the bad blocks list from FILENAME\n"
+	"\t-v\t\tMake a Minix version 2 filesystem\n"
+	"\t-d DIRNAME\tMake a filesystem from DIRNAME"
+);exit(1);}
+#define FALSE   ((int) 0)
+#define TRUE    ((int) 1)
+#define BB_FEATURE_MINIX2 1
 
 #define MINIX_ROOT_INO 1
 #define MINIX_LINK_MAX	250
@@ -215,17 +242,17 @@ static char super_block_buffer[BLOCK_SIZE];
 static char boot_block_buffer[512];
 
 #define Super (*(struct minix_super_block *)super_block_buffer)
-#define INODES ((unsigned long)Super.s_ninodes)
+#define INODES (/*(unsigned long)*/Super.s_ninodes)
 #ifdef BB_FEATURE_MINIX2
-#define ZONES ((unsigned long)(version2 ? Super.s_zones : Super.s_nzones))
+#define ZONES (/*(unsigned long)*/(version2 ? Super.s_zones : Super.s_nzones))
 #else
-#define ZONES ((unsigned long)(Super.s_nzones))
+#define ZONES (/*(unsigned long)*/(Super.s_nzones))
 #endif
-#define IMAPS ((unsigned long)Super.s_imap_blocks)
-#define ZMAPS ((unsigned long)Super.s_zmap_blocks)
-#define FIRSTZONE ((unsigned long)Super.s_firstdatazone)
-#define ZONESIZE ((unsigned long)Super.s_log_zone_size)
-#define MAXSIZE ((unsigned long)Super.s_max_size)
+#define IMAPS (/*(unsigned long)*/Super.s_imap_blocks)
+#define ZMAPS (/*(unsigned long)*/Super.s_zmap_blocks)
+#define FIRSTZONE (/*(unsigned long)*/Super.s_firstdatazone)
+#define ZONESIZE (/*(unsigned long)*/Super.s_log_zone_size)
+#define MAXSIZE (/*(unsigned long)*/Super.s_max_size)
 #define MAGIC (Super.s_magic)
 #define NORM_FIRSTZONE (2+IMAPS+ZMAPS+INODE_BLOCKS)
 
@@ -235,6 +262,8 @@ static char *zone_map;
 static unsigned short good_blocks_table[MAX_GOOD_BLOCKS];
 static int used_good_blocks = 0;
 static unsigned long req_nr_inodes = 0;
+static int last_alloc_inode = 0;
+static int last_alloc_zone = 0;
 
 static inline int bit(char * a,unsigned int i)
 {
@@ -498,6 +527,7 @@ static void make_root_inode(void)
 	if (badblocks)
 		inode->i_size = 3 * dirsize;
 	else {
+		// no badblocks but we already wrote ".badblocks" entry; ream it
 		root_block[2 * dirsize] = '\0';
 		root_block[2 * dirsize + 1] = '\0';
 		inode->i_size = 2 * dirsize;
@@ -521,6 +551,7 @@ static void make_root_inode2(void)
 	if (badblocks)
 		inode->i_size = 3 * dirsize;
 	else {
+		// no badblocks but we already wrote ".badblocks" entry; ream it
 		root_block[2 * dirsize] = '\0';
 		root_block[2 * dirsize + 1] = '\0';
 		inode->i_size = 2 * dirsize;
@@ -543,7 +574,18 @@ static void setup_tables(void)
 	MAGIC = magic;
 	ZONESIZE = 0;
 	MAXSIZE = version2 ? 0x7fffffff : (7 + 512 + 512 * 512) * 1024;
+#ifdef BB_FEATURE_MINIX2
+#if 0
 	ZONES = BLOCKS;
+#else
+	if (version2)
+		Super.s_zones = BLOCKS;
+	else
+		Super.s_nzones = BLOCKS;
+#endif
+#else
+	ZONES = BLOCKS;
+#endif
 /* some magic nrs: 1 inode / 3 blocks */
 	if (req_nr_inodes == 0)
 		inodes = BLOCKS / 3;
@@ -689,12 +731,354 @@ char *filename;
 		printf("one bad block\n");
 }
 
-extern int mkfs_minix_main(int argc, char **argv)
+static int alloc_inode(const struct stat *stat)
+{
+	while (++last_alloc_inode < INODES)
+		if (!inode_in_use(last_alloc_inode)) {
+			struct minix_inode *inode;
+
+			mark_inode(last_alloc_inode);
+			inode = &Inode[last_alloc_inode];
+			inode->i_mode = stat->st_mode;
+			inode->i_uid = stat->st_uid;
+			inode->i_size = 0;
+			inode->i_time = stat->st_mtim.tv_sec;
+			inode->i_gid = stat->st_gid;
+			inode->i_nlinks = 1;
+
+			if (S_ISCHR(stat->st_mode) || S_ISBLK(stat->st_mode)) {
+				inode->i_zone[0] = stat->st_rdev;
+			}
+
+			return last_alloc_inode;
+		}
+	error_msg_and_die("inode full");
+	return -1; // NOTREACHED
+}
+
+#ifdef BB_FEATURE_MINIX2
+static int alloc_inode2(const struct stat *stat)
+{
+	while (++last_alloc_inode < INODES)
+		if (!inode_in_use(last_alloc_inode)) {
+			struct minix2_inode *inode;
+
+			mark_inode(last_alloc_inode);
+			inode = &Inode2[last_alloc_inode];
+			inode->i_mode = stat->st_mode;
+			inode->i_nlinks = 1;
+			inode->i_uid = stat->st_uid;
+			inode->i_gid = stat->st_gid;
+			inode->i_size = 0;
+			inode->i_atime = stat->st_atim.tv_sec;
+			inode->i_mtime = stat->st_mtim.tv_sec;
+			inode->i_ctime = stat->st_ctim.tv_sec;
+
+			if (S_ISCHR(stat->st_mode) || S_ISBLK(stat->st_mode)) {
+				inode->i_zone[0] = stat->st_rdev;
+			}
+
+			return last_alloc_inode;
+		}
+	error_msg_and_die("inode full");
+	return -1; // NOTREACHED
+}
+#endif
+
+static int alloc_zone(void)
+{
+	if (last_alloc_zone < FIRSTZONE)
+		last_alloc_zone = FIRSTZONE - 1;
+	while (++last_alloc_zone < ZONES)
+		if (!zone_in_use(last_alloc_zone)) {
+			mark_zone(last_alloc_zone);
+			return last_alloc_zone;
+		}
+	error_msg_and_die("zone full");
+	return -1; // NOTREACHED
+}
+
+static void read_block(int blk, void *buffer)
+{
+	if (blk * BLOCK_SIZE != lseek(DEV, blk * BLOCK_SIZE, SEEK_SET))
+		error_msg_and_die("seek failed in read_block");
+	if (BLOCK_SIZE != read(DEV, buffer, BLOCK_SIZE))
+		error_msg_and_die("read failed in read_block");
+}
+
+static int extend_inode(int ino)
+{
+	struct minix_inode *inode = &Inode[ino];
+	unsigned short ind_block[BLOCK_SIZE >> 1];
+	int next_block = (inode->i_size + BLOCK_SIZE - 1) >> BLOCK_SIZE_BITS;
+	int alloced;
+
+	if (next_block < 7) {
+		inode->i_zone[next_block] = alloced = alloc_zone();
+	} else if (next_block < 7 + 512) {
+		if (next_block == 7)
+			bzero(ind_block, BLOCK_SIZE);
+		else
+			read_block(inode->i_zone[7], ind_block);
+		ind_block[next_block - 7] = alloced = alloc_zone();
+		write_block(inode->i_zone[7], (char *) ind_block);
+	} else if (next_block < 7 + 512 + 512 * 512) {
+		int i, ind;
+		i = next_block - 7 - 512;
+		if (i == 0) {
+			inode->i_zone[8] = alloc_zone();
+			bzero(ind_block, BLOCK_SIZE);
+		} else
+			read_block(inode->i_zone[8], ind_block);
+		if (i % 512 == 0) {
+			ind = ind_block[i / 512] = alloc_zone();
+			write_block(inode->i_zone[8], (char *) ind_block);
+			bzero(ind_block, BLOCK_SIZE);
+		} else {
+			ind = ind_block[i / 512];
+			read_block(ind, ind_block);
+		}
+		ind_block[i % 512] = alloced = alloc_zone();
+		write_block(ind, (char *) ind_block);
+	} else
+		error_msg_and_die("too many blocks");
+
+	inode->i_size += BLOCK_SIZE;
+
+	return alloced;
+}
+
+#ifdef BB_FEATURE_MINIX2
+static int extend_inode2(int ino)
+{
+	struct minix2_inode *inode = &Inode2[MINIX_BAD_INO];
+	unsigned long ind_block[BLOCK_SIZE >> 2];
+	int next_block = (inode->i_size + BLOCK_SIZE - 1) >> BLOCK_SIZE_BITS;
+	int alloced;
+
+	if (next_block < 7) {
+		inode->i_zone[next_block] = alloced = alloc_zone();
+	} else if (next_block < 7 + 256) {
+		if (next_block == 7)
+			bzero(ind_block, BLOCK_SIZE);
+		else
+			read_block(inode->i_zone[7], ind_block);
+		ind_block[next_block - 7] = alloced = alloc_zone();
+		write_block(inode->i_zone[7], (char *) ind_block);
+	} else if (next_block < 7 + 256 + 256 * 256) {
+		int i, ind;
+		i = next_block - 7 - 256;
+		if (i == 0) {
+			inode->i_zone[8] = alloc_zone();
+			bzero(ind_block, BLOCK_SIZE);
+		} else
+			read_block(inode->i_zone[8], ind_block);
+		if (i % 256 == 0) {
+			ind = ind_block[i / 256] = alloc_zone();
+			write_block(inode->i_zone[8], (char *) ind_block);
+			bzero(ind_block, BLOCK_SIZE);
+		} else {
+			ind = ind_block[i / 256];
+			read_block(ind, ind_block);
+		}
+		ind_block[i % 256] = alloced = alloc_zone();
+		write_block(ind, (char *) ind_block);
+	} else
+		/* Could make triple indirect block here */
+		error_msg_and_die("too many blocks");
+
+	inode->i_size += BLOCK_SIZE;
+
+	return alloced;
+}
+#endif
+
+static unsigned int inode_zone0(int ino)
+{
+	return Inode[ino].i_zone[0];
+}
+
+#ifdef BB_FEATURE_MINIX2
+static unsigned int inode2_zone0(int ino)
+{
+	return Inode2[ino].i_zone[0];
+}
+#endif
+
+static unsigned int inode_fsize(int ino)
+{
+	return Inode[ino].i_size;
+}
+
+#ifdef BB_FEATURE_MINIX2
+static unsigned int inode2_fsize(int ino)
+{
+	return Inode2[ino].i_size;
+}
+#endif
+
+static void inode_setfsize(int ino, int size)
+{
+	Inode[ino].i_size = size;
+}
+
+#ifdef BB_FEATURE_MINIX2
+static void inode2_setfsize(int ino, int size)
+{
+	Inode2[ino].i_size = size;
+}
+#endif
+
+static void inode_inclinks(int ino)
+{
+	Inode[ino].i_nlinks++;
+}
+
+#ifdef BB_FEATURE_MINIX2
+static void inode2_inclinks(int ino)
+{
+	Inode2[ino].i_nlinks++;
+}
+#endif
+
+#ifdef BB_FEATURE_MINIX2
+#define ALLOC_INODE(stat) (version2 ? alloc_inode2(stat) : alloc_inode(stat))
+#define EXTEND_INODE(ino) (version2 ? extend_inode2(ino) : extend_inode(ino))
+#define INODE_ZONE0(ino) (version2 ? inode2_zone0(ino) : inode_zone0(ino))
+#define INODE_FSIZE(ino) (version2 ? inode2_fsize(ino) : inode_fsize(ino))
+#define INODE_SETFSIZE(ino,size) (version2 ? inode2_setfsize(ino,size) : inode_setfsize(ino,size))
+#define INODE_INCLINKS(ino) (version2 ? inode2_inclinks(ino) : inode_inclinks(ino))
+#else
+#define ALLOC_INODE(stat) alloc_inode(stat)
+#define EXTEND_INODE(ino) extend_inode(ino)
+#define INODE_ZONE0(ino) inode_zone0(ino)
+#define INODE_FSIZE(ino) inode_fsize(ino)
+#define INODE_SETFSIZE(ino,size) inode_setfsize(ino,size)
+#define INODE_INCLINKS(ino) inode_inclinks(ino)
+#endif
+
+/// ino.size must be 0 (freshly created inode)
+static int init_dir(int ino, int pino)
+{
+	int bno;
+	char block[BLOCK_SIZE] = "\0";
+	char *tmp = block;
+	*(short *) tmp = ino;
+	strcpy(tmp + 2, ".");
+	tmp += dirsize;
+	*(short *) tmp = pino;
+	strcpy(tmp + 2, "..");
+	bno = EXTEND_INODE(ino);
+	write_block(bno, block);
+	INODE_SETFSIZE(ino, dirsize * 2);
+	return bno;
+}
+
+static void copy_file(int ino, const char *fn, unsigned int size)
+{
+	char block[BLOCK_SIZE];
+	unsigned int rem = size;
+	FILE *sf = fopen(fn, "rb");
+	if (!sf)
+		perror_msg_and_die("could not open file %s/%s", get_current_dir_name(), fn);
+	while(0 < rem) {
+		unsigned int bs = rem < BLOCK_SIZE ? rem : BLOCK_SIZE;
+		int bno = EXTEND_INODE(ino);
+		if (fread(block, 1, bs, sf) < bs)
+			perror_msg_and_die("short read file %s/%s", get_current_dir_name(), fn);
+		write_block(bno, block);
+		rem -= bs;
+	}
+	fclose(sf);
+	INODE_SETFSIZE(ino, size);
+}
+
+// TODO: hardlink detection
+static void seed(int ino)
+{
+	DIR *src;
+	struct dirent *ent;
+	char block[BLOCK_SIZE] = "\0";
+	int i = 0, bno, size;
+
+	// lazy
+	if (BLOCK_SIZE - dirsize < INODE_FSIZE(ino)) {
+		error_msg_and_die("too big existing dirsize %d", INODE_FSIZE(ino));
+	}
+	bno = INODE_ZONE0(ino);
+	read_block(bno, block);
+	while(*(short *)&block[dirsize * i] != 0) i++;
+	size = dirsize * i;
+
+	src = opendir(".");
+	if (!src)
+		error_msg_and_die("could not opendir to %s", get_current_dir_name());
+
+	while (!!(ent = readdir(src))) {
+		int cino;
+		struct stat st;
+
+		if (strcmp(ent->d_name, ".") == 0 || strcmp(ent->d_name, "..") == 0)
+			continue;
+
+		printf("%d %s\n", ent->d_ino, ent->d_name);
+
+		if (BLOCK_SIZE / dirsize <= i) {
+			i = 0; //i -= BLOCK_SIZE / dirsize;
+			write_block(bno, block);
+			bno = EXTEND_INODE(ino);
+			bzero(block, BLOCK_SIZE);
+		}
+
+		if (lstat(ent->d_name, &st))
+			error_msg_and_die("could not stat %s/%s", get_current_dir_name(), ent->d_name);
+		cino = ALLOC_INODE(&st);
+		if (S_ISDIR(st.st_mode)) {
+			if (chdir(ent->d_name))
+				error_msg_and_die("could not chdir to %s/%s", get_current_dir_name(), ent->d_name);
+			init_dir(cino, ino);
+			INODE_INCLINKS(ino);
+			seed(cino);
+			if (chdir(".."))
+				error_msg_and_die("could not chdir to %s/%s/..", get_current_dir_name(), ent->d_name);
+		} else if (S_ISREG(st.st_mode)) {
+			copy_file(cino, ent->d_name, st.st_size);
+		} else if (S_ISCHR(st.st_mode) || S_ISBLK(st.st_mode)) {
+			// nothing to do
+		} else if (S_ISLNK(st.st_mode)) {
+			char symblock[BLOCK_SIZE] = "\0";
+			int sbno = EXTEND_INODE(cino);
+			int sz = readlink(ent->d_name, symblock, BLOCK_SIZE);
+			if (sz < 0)
+				perror_msg_and_die("could not readlink %s/%s", get_current_dir_name(), ent->d_name);
+			write_block(sbno, symblock);
+			INODE_SETFSIZE(cino, sz);
+		} else {
+			fprintf(stderr, "warning: unknown file mode %o; %s\n", st.st_mode, ent->d_name);
+		}
+
+		*(short *)&block[dirsize * i] = cino;
+		strncpy(&block[dirsize * i + 2], ent->d_name, dirsize - 2);
+		if (dirsize - 2 < strlen(ent->d_name))
+			fprintf(stderr, "warning: truncated name: %s/%s\n", get_current_dir_name(), ent->d_name);
+		i++;
+		size += dirsize;
+	}
+
+	write_block(bno, block);
+	INODE_SETFSIZE(ino, size);
+
+	if(closedir(src))
+		error_msg_and_die("could not closedir of %s", get_current_dir_name());
+}
+
+extern int /*mkfs_minix_*/main(int argc, char **argv)
 {
 	int i=1;
 	char *tmp;
 	struct stat statbuf;
 	char *listfile = NULL;
+	char *seeddir = NULL;
 	int stopIt=FALSE;
 
 	if (INODE_SIZE * MINIX_INODES_PER_BLOCK != BLOCK_SIZE)
@@ -736,6 +1120,7 @@ extern int mkfs_minix_main(int argc, char **argv)
 							goto goodbye;
 						}
 						listfile = *(++argv);
+						stopIt=TRUE;
 						break;
 					case 'n':
 						{
@@ -771,6 +1156,13 @@ extern int mkfs_minix_main(int argc, char **argv)
 								device_name);
 						exit(-1);
 #endif
+						break;
+					case 'd':
+						if (--argc == 0) {
+							goto goodbye;
+						}
+						seeddir = *(++argv);
+						stopIt=TRUE;
 						break;
 					case '-':
 					case 'h':
@@ -830,6 +1222,10 @@ goodbye:
 		check_blocks();
 	else if (listfile)
 		get_list_blocks(listfile);
+	// here, only badblock(zone)s are marked,
+	// effectively zone bitmap is the badblock bitmap.
+	// next, we'll allocate some zone, but don't mark it yet
+	// until make_bad_inode*() is done. (that uses badblock bitmap.)
 #ifdef BB_FEATURE_MINIX2
 	if (version2) {
 		make_root_inode2();
@@ -840,7 +1236,13 @@ goodbye:
 		make_root_inode();
 		make_bad_inode();
 	}
-	mark_good_blocks();
+	mark_good_blocks(); // make_bad_inode*() is done, mark alloced good ones too here.
+	if (seeddir) {
+		if (chdir(seeddir))
+			error_msg_and_die("could not chdir to %s/%s", get_current_dir_name(), seeddir);
+
+		seed(MINIX_ROOT_INO);
+	}
 	write_tables();
 	return( 0);
 
