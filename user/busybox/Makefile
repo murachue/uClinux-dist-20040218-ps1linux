@@ -534,7 +534,7 @@ syslog-install:
 
 .PHONY: env-stand-install
 env-stand-install:
-	$(ROMFSINST) -e CONFIG_USER_BUSYBOX_ENV_STAND $(BINDIR)/env
+	$(ROMFSINST) -e CONFIG_USER_BUSYBOX_ENV_STAND /bin/env
 
 ifdef CONFIG_UCLINUX
 INSTALLER=install-romfs.sh
