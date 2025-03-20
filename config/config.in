@@ -914,6 +914,9 @@ if [ "$CONFIG_USER_BUSYBOX_BUSYBOX" = "y" ]; then
 	bool 'Readable sizes' CONFIG_USER_BUSYBOX_HUMAN_READABLE
 	# bool 'Locale Support' CONFIG_USER_BUSYBOX_LOCALE_SUPPORT
 fi
+
+bool 'env (BusyBox)'			CONFIG_USER_BUSYBOX_ENV_STAND
+
 endmenu
 
 #############################################################################

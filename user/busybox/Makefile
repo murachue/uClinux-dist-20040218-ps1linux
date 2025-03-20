@@ -330,11 +330,12 @@ CFLAGS += $(CFLAGS_EXTRA)
 .EXPORT_ALL_VARIABLES:
 
 all:
-	$(MAKE) build-config
-	$(MAKE) applet_source_list
-	$(MAKE) busybox
-	$(MAKE) busybox.links
-	$(MAKE) doc
+	[ "$(CONFIG_USER_BUSYBOX_BUSYBOX)" != y ] || $(MAKE) build-config
+	[ "$(CONFIG_USER_BUSYBOX_BUSYBOX)" != y ] || $(MAKE) applet_source_list
+	[ "$(CONFIG_USER_BUSYBOX_BUSYBOX)" != y ] || $(MAKE) busybox
+	[ "$(CONFIG_USER_BUSYBOX_BUSYBOX)" != y ] || $(MAKE) busybox.links
+	[ "$(CONFIG_USER_BUSYBOX_ENV_STAND)" != y ] || $(MAKE) env
+	[ "$(CONFIG_USER_BUSYBOX_BUSYBOX)" != y ] || $(MAKE) doc
 
 applet_source_list: busybox.sh $(CONFIG_H)
 ifdef NOT_IN_UCLINUX_DIST
@@ -411,6 +412,16 @@ endif
 # directories in which they live.
 busybox.links: busybox.mkll $(CONFIG_H) applets.h
 	- $(SHELL) $^ >$@
+
+env: env_stand.o
+	$(CC) $(LDFLAGS) -o $@ $< $(LIBRARIES) $(LDLIBS)
+
+env_stand.o: env_stand.c $(CONFIG_H) busybox.h applets.h Makefile
+ifeq ($(strip $(BB_SRC_DIR)),)
+	$(CC) $(CFLAGS) -I. $(INCLUDES) $(patsubst %,-I%,$(subst :, ,$(BB_SRC_DIR))) -c $< -o $*.o
+else
+	$(CC) $(CFLAGS) -I- -I. $(patsubst %,-I%,$(subst :, ,$(BB_SRC_DIR))) -c $< -o $*.o
+endif
 
 nfsmount.o cmdedit.o: %.o: %.h
 ash.o hush.o lash.o msh.o: cmdedit.h
@@ -521,6 +532,10 @@ tags:
 syslog-install:
 	$(ROMFSINST) -e CONFIG_USER_BUSYBOX_SYSLOGD -s /var/tmp/log /dev/log
 
+.PHONY: env-stand-install
+env-stand-install:
+	$(ROMFSINST) -e CONFIG_USER_BUSYBOX_ENV_STAND $(BINDIR)/env
+
 ifdef CONFIG_UCLINUX
 INSTALLER=install-romfs.sh
 TARGETDIR=$(ROMFSDIR)/bin/
@@ -532,7 +547,7 @@ COPYPROG=:
 endif
 
 # Before copying, remove all existing busybox links
-romfs: $(INSTALLER) busybox.links syslog-install
+busybox-install: $(INSTALLER) busybox.links syslog-install
 	if [ -f "$$ROMFSDIR/bin/busybox" ]; then \
 		inode=`ls -i $$ROMFSDIR/bin/busybox | awk '{print $$1}'`; \
 		ls -iL "$$ROMFSDIR/bin" | grep "^ *$$inode" | awk '{print $$2}' | \
@@ -540,6 +555,10 @@ romfs: $(INSTALLER) busybox.links syslog-install
 	fi
 	$(COPYPROG) $(PROG) $(ROMFSDIR)/bin/$(PROG)
 	$(SHELL) $< $(TARGETDIR)
+
+romfs:
+	[ "$(CONFIG_USER_BUSYBOX_BUSYBOX)" != y ] || make busybox-install
+	[ "$(CONFIG_USER_BUSYBOX_ENV_STAND)" != y ] || make env-stand-install
 
 # Neat rule to build a new config.h and overwrite if it is different
 # This avoids bulk busybox builds.

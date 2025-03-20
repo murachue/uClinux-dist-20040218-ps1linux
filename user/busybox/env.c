@@ -38,8 +38,16 @@ extern int env_main(int argc, char** argv)
 	int ignore_environment = 0;
 	int ch;
 
+#ifdef STAND
+	// smaller getopt which loses concatenated options e.g. -iuFOO instead of "-i -u FOO"
+	int optind = 1;
+	while (argv[optind][0] == '-') {
+		char *optarg = argv[optind + 1];
+		switch(argv[optind][1]) {
+#else
 	while ((ch = getopt(argc, argv, "+iu:")) != -1) {
 		switch(ch) {
+#endif
 		case 'i':
 			ignore_environment = 1;
 			break;
@@ -49,6 +57,9 @@ extern int env_main(int argc, char** argv)
 		default:
 			show_usage();
 		}
+#ifdef STAND
+		optind++;
+#endif
 	}
 	if (optind != argc && !strcmp(argv[optind], "-")) {
 		ignore_environment = 1;
