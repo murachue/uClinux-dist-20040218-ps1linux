@@ -381,6 +381,8 @@ int parseCommand(char ** commandPtr, struct job * job, int * isBg) {
     }
     if (!argc) {
         freeJob(job);
+        job->numProgs = 0;
+        *commandPtr = NULL;
         return 0;
     }
     prog->argv[argc] = NULL;
