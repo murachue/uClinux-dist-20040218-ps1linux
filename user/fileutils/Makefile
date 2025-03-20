@@ -9,6 +9,9 @@ all: $(EXECS)
 $(EXECS): $(OBJS)
 	$(CC) $(LDFLAGS) -o $@ $@.o $(LDLIBS)
 
+ls: ls.o
+	FLTFLAGS="$(FLTFLAGS) -s 8192" $(CC) $(LDFLAGS) -o $@ $@.o $(LDLIBS)
+
 romfs:
 	$(ROMFSINST) -e CONFIG_USER_FILEUTILS_CAT    /bin/cat
 	$(ROMFSINST) -e CONFIG_USER_FILEUTILS_CHGRP  /bin/chgrp
