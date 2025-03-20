@@ -1022,8 +1022,6 @@ static void seed(int ino)
 		if (strcmp(ent->d_name, ".") == 0 || strcmp(ent->d_name, "..") == 0)
 			continue;
 
-		printf("%d %s\n", ent->d_ino, ent->d_name);
-
 		if (BLOCK_SIZE / dirsize <= i) {
 			i = 0; //i -= BLOCK_SIZE / dirsize;
 			write_block(bno, block);
@@ -1033,6 +1031,9 @@ static void seed(int ino)
 
 		if (lstat(ent->d_name, &st))
 			error_msg_and_die("could not stat %s/%s", get_current_dir_name(), ent->d_name);
+
+		printf("%6d %s  %d\n", st.st_size, ent->d_name, ent->d_ino);
+
 		cino = ALLOC_INODE(&st);
 		if (S_ISDIR(st.st_mode)) {
 			if (chdir(ent->d_name))
