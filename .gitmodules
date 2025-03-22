@@ -1,0 +1,3 @@
+[submodule "ps1linux"]
+	path = vendors/Sony/PlayStation1/PS1Linux
+	url = https://github.com/murachue/PS1Linux.git

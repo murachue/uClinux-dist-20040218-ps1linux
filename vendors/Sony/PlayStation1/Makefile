@@ -40,7 +40,7 @@ DEVICES = \
 
 
 clean:
-	-rm tools/psx-mcard/makemu tools/elf2psx/elf2psx mkfs.minix
+	-rm makemu elf2psx mkfs.minix
 
 romfs:
 	[ -d $(ROMFSDIR)/$$i ] || mkdir -p $(ROMFSDIR)
@@ -64,21 +64,21 @@ romfs:
 	#echo "$(VERSIONSTR) -- " `date` > $(ROMFSDIR)/etc/version
 	echo "$(VERSIONSTR) -- " `date` > $(ROMFSDIR)/version
 
-image: tools/psx-mcard/makemu tools/elf2psx/elf2psx mkfs.minix
+image: makemu elf2psx mkfs.minix
 	[ -d $(IMAGEDIR) ] || mkdir -p $(IMAGEDIR)
-	tools/psx-mcard/makemu
+	./makemu
 	mv -fv output.mcd $(ROMFSIMG)
 	dd if=/dev/zero of=$(ROMFSIMG).part bs=128 count=$$((131072/128-8))
 	./mkfs.minix -i 32 -d $(ROMFSDIR) $(ROMFSIMG).part
 	dd if=$(ROMFSIMG).part of=$(ROMFSIMG) bs=128 seek=8 count=$$((131072/128-8))
 	rm $(ROMFSIMG).part
-	tools/elf2psx/elf2psx -p $(ROOTDIR)/$(LINUXDIR)/linux $(IMAGE)
+	./elf2psx -p $(ROOTDIR)/$(LINUXDIR)/linux $(IMAGE)
 	awk '{print substr($$1,9,8)" "$$3}' $(ROOTDIR)/$(LINUXDIR)/System.map > $(IMAGEDIR)/kernel.sym
 
-tools/psx-mcard/makemu: tools/psx-mcard/makemu.c
+makemu: PS1Linux/tools/psx-mcard/makemu.c
 	$(HOSTCC) -o $@ $<
 
-tools/elf2psx/elf2psx: tools/elf2psx/elf2psx.c
+elf2psx: PS1Linux/tools/elf2psx/elf2psx.c
 	$(HOSTCC) -o $@ $<
 
 mkfs.minix: mkfs_minix.c
