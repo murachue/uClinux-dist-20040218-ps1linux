@@ -40,6 +40,7 @@ DEVICES = \
 
 
 clean:
+	-rm tools/psx-mcard/makemu tools/elf2psx/elf2psx mkfs.minix
 
 romfs:
 	[ -d $(ROMFSDIR)/$$i ] || mkdir -p $(ROMFSDIR)
