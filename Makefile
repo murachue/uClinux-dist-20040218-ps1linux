@@ -170,7 +170,10 @@ menuconfig: config.in
 	@config/setconfig final
 
 .PHONY: oldconfig
-oldconfig:
+oldconfig: config.in
+	@HELP_FILE=config/Configure.help \
+		$(CONFIG_SHELL) $(SCRIPTSDIR)/Configure -d config.in
+	@config/setconfig defaults
 	@$(MAKE) oldconfig_linux
 	@$(MAKE) oldconfig_modules
 	@$(MAKE) oldconfig_config
