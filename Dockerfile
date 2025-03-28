@@ -24,13 +24,18 @@ RUN tar xf binutils-2.22.tar.bz2 && mkdir binutils-2.22/build
 RUN cd binutils-2.22/build && CFLAGS="-Wno-error=implicit-fallthrough -Wno-error=unused-value -Wno-error=cast-function-type -Wno-error=format-overflow -Wno-error=pointer-compare -Wno-error=shift-negative-value" ../configure --target=mipsel-linux --enable-targets=mipsel-elf
 RUN cd binutils-2.22/build && make -j$NCPU
 
-# add elf2flt
-ADD https://github.com/murachue/elf2flt.git /elf2flt
+# add elf2flt (master@2025-03-20)
+ADD https://github.com/murachue/elf2flt.git#7c318f5692fa293494d537d55ad236ec1923d5e8 /elf2flt
 RUN cd elf2flt && ./configure --target=mipsel-linux --with-binutils-build-dir=../binutils-2.22/build --with-binutils-include-dir=../binutils-2.22/include
 RUN cd elf2flt && make -j$NCPU && make install
 
-FROM debian:bookworm
+FROM debian:bookworm AS provision
 RUN rm -rf /usr/local/*
 COPY --from=build /usr/local /usr/local/
 RUN apt-get update && apt-get install -y make gcc libncurses-dev git  less vim-tiny
+RUN apt-get clean
+
+FROM scratch
+COPY --from=provision / /
 WORKDIR /work
+CMD ["bash"]
