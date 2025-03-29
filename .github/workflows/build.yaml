@@ -17,24 +17,6 @@ jobs:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
-
-      - uses: actions/cache@v3
-        id: cache
-        with:
-          path: |
-            var-cache-apt
-            var-lib-apt
-          # key: cache-${{ hashFiles('Dockerfile') }}
-      - uses: reproducible-containers/buildkit-cache-dance@5b6db76d1da5c8b307d5d2e0706d266521b710de # v3.1.2
-        with:
-          utility-image: ghcr.io/containerd/busybox@sha256:7b3ccabffc97de872a30dfd234fd972a66d247c8cfc69b0550f276481852627c # 1.36, newer than latest?? (as of 2025-03-29)
-          cache-map: |
-            {
-              "var-cache-apt": "/var/cache/apt",
-              "var-lib-apt": "/var/lib/apt"
-            }
-          skip-extraction: ${{ steps.cache.outputs.cache-hit }}
-
       - uses: SimenB/github-actions-cpu-cores@97ba232459a8e02ff6121db9362b09661c875ab8  # v2.0.0
         id: cpucores
       - uses: docker/metadata-action@902fa8ec7d6ecbf8d84d538b9b233a880e428804 # v5.7.0
