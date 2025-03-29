@@ -2,10 +2,22 @@
 
 # --platform=linux/386
 
-FROM debian:bookworm AS build
+# bookworm-20250317 linux/386
+FROM debian@sha256:18023f131f52fc3ea21973cabffe0b216c60b417fd2478e94d9d59981ebba6af AS imgbase
+
+FROM imgbase AS base
+# v0.1.4
+ADD https://github.com/reproducible-containers/repro-sources-list.sh.git#39fbf150e3a5062d4c6b9a241f25af133e7cb6f0 /opt/repro-sources-list-sh
+ENV WRITE_SOURCE_DATE_EPOCH=/epoch
+RUN /opt/repro-sources-list-sh/repro-sources-list.sh
+RUN rm -rf /opt/repro-sources-list-sh
+
+FROM base AS build
 ARG NCPU=1
 
-RUN apt-get update && apt-get install -y make gcc bzip2 zlib1g-dev
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt-get update && apt-get install -y make gcc bzip2 zlib1g-dev
 
 # expand Runix toolchain (with binutils 2.9)
 ADD vendors/Sony/PlayStation1/PS1Linux/tools/mipsel-linux-cross-i586.tar.gz /
@@ -29,11 +41,22 @@ ADD https://github.com/murachue/elf2flt.git#7c318f5692fa293494d537d55ad236ec1923
 RUN cd elf2flt && ./configure --target=mipsel-linux --with-binutils-build-dir=../binutils-2.22/build --with-binutils-include-dir=../binutils-2.22/include
 RUN cd elf2flt && make -j$NCPU && make install
 
-FROM debian:bookworm AS provision
+FROM base AS provision
 RUN rm -rf /usr/local/*
 COPY --from=build /usr/local /usr/local/
-RUN apt-get update && apt-get install -y make gcc libncurses-dev git  less vim-tiny
-RUN apt-get clean
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt-get update && apt-get install -y make gcc libncurses-dev git  less vim-tiny
+# https://github.com/reproducible-containers/repro-sources-list.sh/blob/39fbf150e3a5062d4c6b9a241f25af133e7cb6f0/Dockerfile.debian-12#L11
+RUN rm -rf /var/log/* /var/cache/ldconfig/aux-cache
+# revert repro to allow user go newer world
+RUN rm -rf /etc/apt
+COPY --from=imgbase /etc/apt /etc/apt
+# finally make timestamp repro
+# ref: https://medium.com/nttlabs/bit-for-bit-reproducible-builds-with-dockerfile-7cc2b9faed9f
+# the pullreq was merged, but I don't want to rely on builder options, to make the epoch is clear on only look this Dockerfile.
+RUN find / -path /dev -o -path /mnt -o -path /proc -o -path sys -prune -o -newermt @$(cat /epoch) -writable -xdev -print0 | xargs -0 touch --date=@$(cat /epoch) --no-dereference
+RUN rm /epoch
 
 FROM scratch
 COPY --from=provision / /
